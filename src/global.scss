@@ -1,5 +1,6 @@
 /*
  * App Global CSS
+ * App Global CSS - Pintu Vendor Platform
  * ----------------------------------------------------------------------------
  * Put style rules here that you want to apply globally. These styles are for
  * the entire app and not just one component. Additionally, this file can be
@@ -19,6 +20,7 @@
 @import "@ionic/angular/css/display.css";
 
 /* Optional CSS utils that can be commented out */
+/* Optional CSS utils */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
@@ -31,7 +33,43 @@
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
  */
+/* Ionic Palette Class for programmatic Dark/Light toggle */
+@import "@ionic/angular/css/palettes/dark.class.css";
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+html, body {
+  background-color: var(--vendor-bg);
+  color: var(--vendor-text-primary);
+  transition: background-color 0.25s ease, color 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vendor-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vendor-text-muted);
+}
+
+/* Global Ion Icon styling */
+ion-icon {
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
+  stroke: currentColor;
+}

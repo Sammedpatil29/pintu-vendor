@@ -1,0 +1,377 @@
+<div class="vendor-layout-container" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- ==========================================
+       DESKTOP SIDEBAR (>= 992px)
+       ========================================== -->
+  <aside class="desktop-sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo" routerLink="/layout/dashboard">
+        <div class="brand-icon-box">
+          <ion-icon name="storefront"></ion-icon>
+        </div>
+        <div class="brand-text-col" *ngIf="!isSidebarCollapsed">
+          <span class="brand-name">PINTU</span>
+          <span class="brand-sub">VENDOR HUB</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="collapse-toggle-btn"
+        (click)="toggleSidebar()"
+        [title]="isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+      >
+        <ion-icon [name]="isSidebarCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Store Info Card in Sidebar (Clickable to switch store) -->
+    <div
+      class="sidebar-store-card"
+      *ngIf="!isSidebarCollapsed"
+      (click)="openStoreSwitcherModal()"
+      title="Click to Switch Active Store"
+    >
+      <div class="store-avatar">
+        <ion-icon [name]="activeStore?.serviceIcon || 'storefront'"></ion-icon>
+        <span class="status-dot" [class.online]="isStoreOpen"></span>
+      </div>
+      <div class="store-details">
+        <h4 class="store-name">{{ activeStore?.name || 'Pintu Store' }}</h4>
+        <div class="store-sub-line">
+          <span class="store-city">{{ activeStore?.city || 'Hubballi' }}</span>
+          <span class="dot">&bull;</span>
+          <span class="store-category">{{ activeStore?.serviceLabel || 'Store' }}</span>
+        </div>
+      </div>
+      <div class="switch-store-pill-mini">
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+      </div>
+    </div>
+
+    <!-- Navigation List -->
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li *ngFor="let item of navItems" class="nav-item">
+          <a
+            [routerLink]="item.path"
+            class="nav-link"
+            [class.active]="isActive(item.path)"
+            [title]="item.label"
+          >
+            <div class="nav-icon-wrap">
+              <ion-icon [name]="item.icon"></ion-icon>
+            </div>
+            <span class="nav-label" *ngIf="!isSidebarCollapsed">{{ item.label }}</span>
+            <span
+              *ngIf="item.badge && !isSidebarCollapsed"
+              class="nav-badge"
+            >
+              {{ item.badge }}
+            </span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <div class="user-profile-snippet" *ngIf="!isSidebarCollapsed">
+        <div class="user-meta">
+          <span class="user-phone">+91 {{ currentUser?.phone || '' }}</span>
+          <span class="user-role">{{ currentUser?.name || 'Vendor Admin' }}</span>
+        </div>
+        <button
+          type="button"
+          class="logout-icon-btn"
+          (click)="confirmLogout()"
+          title="Sign Out"
+        >
+          <ion-icon name="log-out-outline"></ion-icon>
+        </button>
+      </div>
+
+      <button
+        *ngIf="isSidebarCollapsed"
+        type="button"
+        class="logout-icon-btn collapsed-logout"
+        (click)="confirmLogout()"
+        title="Sign Out"
+      >
+        <ion-icon name="log-out-outline"></ion-icon>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==========================================
+       MAIN VIEWPORT (Header + Router Outlet)
+       ========================================== -->
+  <div class="main-viewport">
+    <!-- Top Header Bar -->
+    <header class="app-header">
+      <div class="header-left">
+        <!-- Mobile Drawer Trigger -->
+        <button
+          type="button"
+          class="mobile-menu-btn"
+          (click)="toggleMobileDrawer()"
+          aria-label="Open Navigation Menu"
+        >
+          <ion-icon name="menu-outline"></ion-icon>
+        </button>
+
+        <!-- Page Title & Store Identity -->
+        <div class="header-title-box">
+          <h1 class="page-title">{{ getPageTitle() }}</h1>
+          <span class="store-badge-inline">
+            <span class="pulse-indicator" [class.active]="isStoreOpen"></span>
+            {{ isStoreOpen ? 'Accepting Orders' : 'Store Paused' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Center / Right: STORE SWITCHER TRIGGER -->
+      <button
+        type="button"
+        class="header-store-switcher-btn"
+        (click)="openStoreSwitcherModal()"
+        title="Switch Active Store (City > Service Category > Store)"
+      >
+        <div class="switcher-icon-wrap">
+          <ion-icon [name]="activeStore?.serviceIcon || 'storefront-outline'"></ion-icon>
+        </div>
+        <div class="switcher-text-col">
+          <div class="switcher-path">
+            <span class="path-city">{{ activeStore?.city || 'City' }}</span>
+            <span class="path-sep">&rsaquo;</span>
+            <span class="path-svc">{{ activeStore?.serviceLabel || 'Service' }}</span>
+          </div>
+          <span class="switcher-store-name">{{ activeStore?.name || 'Select Store' }}</span>
+        </div>
+        <ion-icon name="chevron-down-outline" class="switcher-chevron"></ion-icon>
+      </button>
+
+      <div class="header-right">
+        <!-- Store Open / Paused Quick Toggle Switch -->
+        <div class="store-toggle-card" (click)="onStoreStatusChange()" [class.is-open]="isStoreOpen">
+          <div class="toggle-status-text">
+            <span class="toggle-title">{{ isStoreOpen ? 'STORE ONLINE' : 'STORE PAUSED' }}</span>
+            <span class="toggle-sub">{{ isStoreOpen ? 'Live on app' : 'Not taking orders' }}</span>
+          </div>
+          <div class="custom-toggle-track">
+            <div class="custom-toggle-thumb"></div>
+          </div>
+        </div>
+
+        <!-- Theme Toggle Button (Light / Dark) -->
+        <button
+          type="button"
+          class="header-action-btn theme-toggle-btn"
+          (click)="toggleTheme()"
+          [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          aria-label="Toggle Theme"
+        >
+          <ion-icon [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+        </button>
+
+        <!-- Notification Bell -->
+        <div class="header-action-btn" title="Live Alerts">
+          <ion-icon name="notifications-outline"></ion-icon>
+          <span class="notification-dot"></span>
+        </div>
+
+        <!-- User Avatar & Dropdown -->
+        <div class="profile-dropdown-wrapper">
+          <button
+            type="button"
+            class="profile-avatar-btn"
+            (click)="toggleProfileMenu()"
+            title="User Profile"
+          >
+            <div class="avatar-circle">
+              {{ (currentUser?.name || activeStore?.name || 'V').charAt(0) }}
+            </div>
+            <ion-icon name="chevron-down-outline" class="dropdown-chevron"></ion-icon>
+          </button>
+
+          <!-- Dropdown Popover -->
+          <div class="profile-popover" *ngIf="isProfileMenuOpen">
+            <div class="popover-header">
+              <strong>{{ activeStore?.name || 'Merchant Store' }}</strong>
+              <span>{{ activeStore?.city }} &bull; +91 {{ currentUser?.phone || '' }}</span>
+            </div>
+            <div class="popover-divider"></div>
+            <!-- Switch Store In Popover -->
+            <button type="button" class="popover-item switch-store-item" (click)="openStoreSwitcherModal()">
+              <ion-icon name="swap-horizontal-outline"></ion-icon>
+              <span>Switch Active Store...</span>
+            </button>
+            <a routerLink="/layout/settings" class="popover-item" (click)="closeProfileMenu()">
+              <ion-icon name="settings-outline"></ion-icon>
+              <span>Store Settings</span>
+            </a>
+            <a routerLink="/layout/catalog" class="popover-item" (click)="closeProfileMenu()">
+              <ion-icon name="cube-outline"></ion-icon>
+              <span>Manage Products</span>
+            </a>
+            <div class="popover-item theme-switch-item" (click)="toggleTheme()">
+              <ion-icon [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+              <span>{{ themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}</span>
+            </div>
+            <div class="popover-divider"></div>
+            <button type="button" class="popover-item logout-item" (click)="confirmLogout()">
+              <ion-icon name="log-out-outline"></ion-icon>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content-area" (click)="closeProfileMenu()">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- ==========================================
+       MOBILE SLIDE-OVER DRAWER (< 992px)
+       ========================================== -->
+  <div
+    class="mobile-drawer-overlay"
+    *ngIf="isMobileDrawerOpen"
+    (click)="closeMobileDrawer()"
+  ></div>
+
+  <div class="mobile-drawer" [class.open]="isMobileDrawerOpen">
+    <div class="drawer-header">
+      <div class="drawer-brand" (click)="openStoreSwitcherModal()">
+        <div class="drawer-logo-icon">
+          <ion-icon [name]="activeStore?.serviceIcon || 'storefront'"></ion-icon>
+        </div>
+        <div>
+          <h3>{{ activeStore?.name || 'Pintu Merchant' }}</h3>
+          <span class="drawer-phone">{{ activeStore?.city }} &bull; {{ activeStore?.serviceLabel }}</span>
+        </div>
+      </div>
+      <button type="button" class="drawer-close-btn" (click)="closeMobileDrawer()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Quick Switch Store Pill in Mobile Drawer -->
+    <button type="button" class="drawer-switch-store-btn" (click)="openStoreSwitcherModal()">
+      <div class="btn-left">
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+        <div class="btn-texts">
+          <span class="btn-title">Switch Active Store</span>
+          <span class="btn-sub">{{ activeStore?.city }} &bull; {{ activeStore?.serviceLabel }}</span>
+        </div>
+      </div>
+      <ion-icon name="chevron-forward-outline" class="btn-chevron"></ion-icon>
+    </button>
+
+    <!-- Quick Store Toggle in Mobile Drawer -->
+    <div class="drawer-status-box" (click)="onStoreStatusChange()" [class.online]="isStoreOpen">
+      <div class="status-left">
+        <span class="status-dot-mobile" [class.active]="isStoreOpen"></span>
+        <div class="status-info">
+          <strong>{{ isStoreOpen ? 'Store is Online' : 'Store is Paused' }}</strong>
+          <small>{{ isStoreOpen ? 'Tap to pause orders' : 'Tap to go online' }}</small>
+        </div>
+      </div>
+      <ion-icon [name]="isStoreOpen ? 'checkmark-circle' : 'pause-circle'"></ion-icon>
+    </div>
+
+    <!-- Navigation List in Drawer -->
+    <ul class="drawer-nav-list">
+      <li *ngFor="let item of navItems">
+        <a
+          [routerLink]="item.path"
+          class="drawer-nav-link"
+          [class.active]="isActive(item.path)"
+          (click)="closeMobileDrawer()"
+        >
+          <ion-icon [name]="item.icon"></ion-icon>
+          <span>{{ item.label }}</span>
+          <span *ngIf="item.badge" class="drawer-badge">{{ item.badge }}</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="drawer-divider"></div>
+
+    <div class="drawer-footer">
+      <!-- Theme Switch Row in Drawer -->
+      <button type="button" class="drawer-theme-btn" (click)="toggleTheme()">
+        <div class="theme-btn-left">
+          <ion-icon [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+          <span>Appearance</span>
+        </div>
+        <span class="theme-current-pill">{{ themeService.isDark() ? 'Dark Mode' : 'Light Mode' }}</span>
+      </button>
+
+      <div class="support-contact-pill">
+        <ion-icon name="headset-outline"></ion-icon>
+        <span>Merchant Helpline: 1800-PINTU-HELP</span>
+      </div>
+
+      <button type="button" class="drawer-logout-btn" (click)="confirmLogout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span>Sign Out</span>
+      </button>
+      <span class="drawer-version">Pintu Vendor App v1.0</span>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MOBILE BOTTOM NAVIGATION BAR (< 992px)
+       ========================================== -->
+  <nav class="mobile-bottom-nav">
+    <a
+      routerLink="/layout/dashboard"
+      class="bottom-nav-item"
+      [class.active]="isActive('/layout/dashboard')"
+    >
+      <ion-icon name="grid-outline"></ion-icon>
+      <span>Home</span>
+    </a>
+
+    <a
+      routerLink="/layout/orders"
+      class="bottom-nav-item"
+      [class.active]="isActive('/layout/orders')"
+    >
+      <div class="nav-icon-relative">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <span class="nav-counter">3</span>
+      </div>
+      <span>Orders</span>
+    </a>
+
+    <a
+      routerLink="/layout/catalog"
+      class="bottom-nav-item"
+      [class.active]="isActive('/layout/catalog')"
+    >
+      <ion-icon name="cube-outline"></ion-icon>
+      <span>Catalog</span>
+    </a>
+
+    <a
+      routerLink="/layout/analytics"
+      class="bottom-nav-item"
+      [class.active]="isActive('/layout/analytics')"
+    >
+      <ion-icon name="wallet-outline"></ion-icon>
+      <span>Settlements</span>
+    </a>
+
+    <button
+      type="button"
+      class="bottom-nav-item"
+      (click)="toggleMobileDrawer()"
+    >
+      <ion-icon name="menu-outline"></ion-icon>
+      <span>Menu</span>
+    </button>
+  </nav>
+</div>

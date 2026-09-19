@@ -1,2 +1,131 @@
 // For information on how to create your own theme, please refer to:
+// Ionic Variables and Theming with Pintu Brand Theme #a000e2
 // https://ionicframework.com/docs/theming/
+// Supports both Dark and Light themes with persistent toggle
+
+:root {
+  /** Pintu Brand Primary: #a000e2 **/
+  --ion-color-primary: #a000e2;
+  --ion-color-primary-rgb: 160, 0, 226;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #8d00c7;
+  --ion-color-primary-tint: #b526f2;
+
+  /** Secondary (Accent Purple) **/
+  --ion-color-secondary: #c854ff;
+  --ion-color-secondary-rgb: 200, 84, 255;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #b04ae0;
+  --ion-color-secondary-tint: #ce65ff;
+
+  /** Success (Online / Active) **/
+  --ion-color-success: #10b981;
+  --ion-color-success-rgb: 16, 185, 129;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #0e9f6e;
+  --ion-color-success-tint: #22c55e;
+
+  /** Warning (Store Paused) **/
+  --ion-color-warning: #f59e0b;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #d97706;
+  --ion-color-warning-tint: #fbbf24;
+
+  /** Danger (Logout / Errors) **/
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #dc2626;
+  --ion-color-danger-tint: #f87171;
+
+  /** Dark Surface Backgrounds **/
+  --ion-background-color: #0b1320;
+  --ion-background-color-rgb: 11, 19, 32;
+  --ion-text-color: #f8fafc;
+  --ion-text-color-rgb: 248, 250, 252;
+
+  /** Custom Brand Variables **/
+  /** Custom Brand Variables (Consistent across both themes) **/
+  --pintu-primary: #a000e2;
+  --pintu-primary-glow: rgba(160, 0, 226, 0.25);
+  --pintu-primary-tint: #b526f2;
+  --pintu-primary-dark: #7900b2;
+  --pintu-primary-surface: rgba(160, 0, 226, 0.12);
+}
+
+/* =========================================================
+   DARK THEME (Default)
+   ========================================================= */
+:root,
+body.dark {
+  --ion-background-color: #0b1320;
+  --ion-background-color-rgb: 11, 19, 32;
+  --ion-text-color: #f8fafc;
+  --ion-text-color-rgb: 248, 250, 252;
+
+  --vendor-bg: #0b1320;
+  --vendor-viewport-gradient: radial-gradient(circle at 10% 20%, rgba(160, 0, 226, 0.14) 0%, transparent 42%),
+                              radial-gradient(circle at 90% 80%, rgba(200, 84, 255, 0.08) 0%, transparent 45%),
+                              #0b1320;
+  --vendor-sidebar-bg: #111a2c;
+  --vendor-header-bg: #111a2c;
+  --vendor-surface: #131d2e;
+  --vendor-surface-secondary: #182438;
+  --vendor-surface-hover: rgba(255, 255, 255, 0.05);
+  --vendor-border: rgba(255, 255, 255, 0.08);
+  --vendor-border-subtle: rgba(255, 255, 255, 0.05);
+
+  --vendor-text-primary: #f8fafc;
+  --vendor-text-secondary: #94a3b8;
+  --vendor-text-muted: #64748b;
+
+  --vendor-input-bg: #0f172a;
+  --vendor-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --vendor-popover-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+
+  --vendor-pill-bg: rgba(255, 255, 255, 0.05);
+  --vendor-pill-border: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+body.light {
+  --ion-background-color: #f8fafc;
+  --ion-background-color-rgb: 248, 250, 252;
+  --ion-text-color: #0f172a;
+  --ion-text-color-rgb: 15, 23, 42;
+
+  --vendor-bg: #f8fafc;
+  --vendor-viewport-gradient: radial-gradient(circle at 10% 10%, rgba(160, 0, 226, 0.06) 0%, transparent 45%),
+                              radial-gradient(circle at 90% 90%, rgba(181, 38, 242, 0.04) 0%, transparent 45%),
+                              #f8fafc;
+  --vendor-sidebar-bg: #ffffff;
+  --vendor-header-bg: #ffffff;
+  --vendor-surface: #ffffff;
+  --vendor-surface-secondary: #f1f5f9;
+  --vendor-surface-hover: rgba(160, 0, 226, 0.08);
+  --vendor-border: #e2e8f0;
+  --vendor-border-subtle: #edf2f7;
+
+  --vendor-text-primary: #0f172a;
+  --vendor-text-secondary: #334155;
+  --vendor-text-muted: #64748b;
+
+  --vendor-input-bg: #f8fafc;
+  --vendor-card-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --vendor-popover-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+
+  --vendor-pill-bg: #f1f5f9;
+  --vendor-pill-border: #e2e8f0;
+
+  --pintu-primary: #8d00c7;
+  --pintu-primary-surface: rgba(160, 0, 226, 0.1);
+  --pintu-primary-glow: rgba(160, 0, 226, 0.18);
+}

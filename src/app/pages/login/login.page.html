@@ -1,0 +1,256 @@
+<ion-content [fullscreen]="true" class="login-viewport">
+  <div class="login-wrapper">
+    <!-- Floating Theme Toggle Button -->
+    <button
+      type="button"
+      class="login-theme-toggle"
+      (click)="toggleTheme()"
+      [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      aria-label="Toggle Theme"
+    >
+      <ion-icon [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+      <span class="theme-text">{{ themeService.isDark() ? 'Light Mode' : 'Dark Mode' }}</span>
+    </button>
+
+    <!-- Desktop Left Showcase Pane (>= 992px) -->
+    <div class="brand-showcase-pane">
+      <div class="showcase-glow-circle circle-1"></div>
+      <div class="showcase-glow-circle circle-2"></div>
+
+      <div class="showcase-content">
+        <div class="brand-badge">
+          <ion-icon name="storefront-outline" class="badge-icon"></ion-icon>
+          <span>PINTU MERCHANT PLATFORM</span>
+        </div>
+
+        <h1 class="showcase-title">
+          Grow Your Business with <span class="gradient-text">Pintu Partner</span>
+        </h1>
+        <p class="showcase-sub">
+          One unified portal to manage your store, track incoming customer orders, monitor catalog inventory, and scale sales across web and mobile.
+        </p>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon-wrap">
+              <ion-icon name="flash-outline"></ion-icon>
+            </div>
+            <div class="feature-text">
+              <h4>Instant Order Dispatch</h4>
+              <p>Real-time order ping with sound alerts and instant dispatch controls.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon-wrap">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="feature-text">
+              <h4>Live Inventory &amp; Stock Sync</h4>
+              <p>Quick toggle items in/out of stock instantly across web and mobile devices.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon-wrap">
+              <ion-icon name="trending-up-outline"></ion-icon>
+            </div>
+            <div class="feature-text">
+              <h4>Automated Daily Settlements</h4>
+              <p>Transparent accounting, earnings breakdown, and direct payouts to your bank account.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-stats-card">
+          <div class="stat-col">
+            <span class="stat-val">99.4%</span>
+            <span class="stat-lbl">Order Fill Rate</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-col">
+            <span class="stat-val">&lt; 15 min</span>
+            <span class="stat-lbl">Avg. Delivery</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-col">
+            <span class="stat-val">24 / 7</span>
+            <span class="stat-lbl">Partner Support</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right / Mobile Main Card Pane -->
+    <div class="auth-form-pane">
+      <div class="auth-card">
+        <!-- Top App Brand for Mobile & Desktop -->
+        <div class="auth-header">
+          <div class="logo-pill">
+            <ion-icon name="storefront" class="logo-icon"></ion-icon>
+            <div class="logo-text-block">
+              <span class="logo-title">PINTU</span>
+              <span class="logo-tag">VENDOR HUB</span>
+            </div>
+          </div>
+
+          <!-- Step 1 Title -->
+          @if (currentStep === 'phone') {
+            <div class="step-heading">
+              <h2>Vendor Sign In</h2>
+              <p>Enter your registered mobile number to receive your login verification code on your registered email.</p>
+            </div>
+          }
+
+          <!-- Step 2 Title -->
+          @if (currentStep === 'otp') {
+            <div class="step-heading">
+              <h2>Enter Verification Code</h2>
+              <p>
+                We've sent a 6-digit code to your registered email
+                @if (registeredEmail) {
+                  <strong class="email-highlight"> ({{ registeredEmail }})</strong>
+                }
+                linked with mobile <strong class="phone-highlight">+91 {{ phoneNumber }}</strong>
+                <button type="button" class="edit-btn" (click)="editPhoneNumber()">
+                  <ion-icon name="create-outline"></ion-icon> Change
+                </button>
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Global Error Banner -->
+        @if (errorMessage) {
+          <div class="error-banner">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <!-- ================= STEP 1: PHONE FORM ================= -->
+        @if (currentStep === 'phone') {
+          <form (ngSubmit)="requestOtp($event)" class="form-body">
+            <div class="form-group">
+              <label class="input-label" for="phoneInput">Registered Mobile Number</label>
+              <div class="phone-input-group" [class.has-error]="errorMessage">
+                <div class="country-badge">
+                  <span class="flag-icon">🇮🇳</span>
+                  <span class="dial-code">+91</span>
+                </div>
+                <input
+                  id="phoneInput"
+                  type="tel"
+                  inputmode="numeric"
+                  maxlength="10"
+                  placeholder="Enter 10-digit number"
+                  [value]="phoneNumber"
+                  (input)="onPhoneInput($event)"
+                  class="phone-field"
+                  autocomplete="tel"
+                  autofocus
+                />
+                @if (phoneNumber.length > 0) {
+                  <button
+                    type="button"
+                    class="clear-input-btn"
+                    (click)="phoneNumber = ''"
+                  >
+                    <ion-icon name="close-circle"></ion-icon>
+                  </button>
+                }
+              </div>
+              <span class="field-hint">
+                <ion-icon name="mail-outline"></ion-icon>
+                OTP will be delivered directly to your registered email address
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              class="submit-btn"
+              [disabled]="!isValidPhone() || isLoading"
+            >
+              @if (!isLoading) {
+                <span>Send OTP to Email</span>
+              } @else {
+                <ion-spinner name="crescent"></ion-spinner>
+              }
+            </button>
+          </form>
+        }
+
+        <!-- ================= STEP 2: OTP FORM ================= -->
+        @if (currentStep === 'otp') {
+          <div class="form-body">
+            <div class="form-group">
+              <div class="otp-label-row">
+                <label class="input-label">6-Digit Verification Code</label>
+                @if (registeredEmail) {
+                  <span class="email-subtext">Check your inbox</span>
+                }
+              </div>
+              <div class="otp-digits-container" (paste)="onOtpPaste($event)">
+                @for (digit of otpDigits; track $index; let i = $index) {
+                  <input
+                    #otpInput
+                    type="tel"
+                    inputmode="numeric"
+                    maxlength="1"
+                    class="otp-digit-box"
+                    [value]="digit"
+                    (input)="onOtpDigitInput(i, $event)"
+                    (keydown)="onOtpKeyDown(i, $event)"
+                  />
+                }
+              </div>
+            </div>
+
+            <div class="resend-row">
+              @if (resendCountdown > 0) {
+                <span class="timer-text">
+                  Resend code in <strong class="timer-highlight">{{ resendCountdown }}s</strong>
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  class="resend-btn"
+                  (click)="resendOtp()"
+                  [disabled]="isLoading"
+                >
+                  <ion-icon name="refresh-outline"></ion-icon> Resend OTP
+                </button>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="submit-btn"
+              (click)="verifyOtp()"
+              [disabled]="!isOtpComplete() || isLoading"
+            >
+              @if (!isLoading) {
+                <span>Verify &amp; Enter Dashboard</span>
+              } @else {
+                <ion-spinner name="crescent"></ion-spinner>
+              }
+            </button>
+          </div>
+        }
+
+        <!-- Card Footer -->
+        <div class="auth-footer">
+          <div class="security-note">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Secured 256-bit encrypted merchant portal</span>
+          </div>
+          <p class="terms-text">
+            By signing in, you agree to Pintu's
+            <a href="javascript:void(0)">Merchant Terms</a> &amp;
+            <a href="javascript:void(0)">Privacy Policy</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

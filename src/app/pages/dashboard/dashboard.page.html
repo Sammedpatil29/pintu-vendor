@@ -1,0 +1,242 @@
+<div class="dashboard-page-container">
+  <!-- Store Paused Warning Banner (if toggled off) -->
+  <div *ngIf="!isStoreOpen" class="store-paused-banner">
+    <div class="banner-icon">
+      <ion-icon name="pause-circle"></ion-icon>
+    </div>
+    <div class="banner-text">
+      <h4>{{ activeStore?.name || 'Your Store' }} is Currently Paused</h4>
+      <p>Customers cannot place new orders or bookings until you toggle this store back online in the top bar.</p>
+    </div>
+  </div>
+
+  <!-- Welcome / Overview Header -->
+  <div class="dashboard-hero-card">
+    <div class="hero-content">
+      <div class="hero-top-row">
+        <span class="store-tag">
+          <ion-icon [name]="activeStore?.serviceIcon || 'storefront-outline'"></ion-icon>
+          {{ activeStore?.serviceLabel || 'Merchant' | uppercase }}
+        </span>
+        <span class="location-pill">
+          <ion-icon name="location-outline"></ion-icon>
+          {{ activeStore?.city || 'Hubballi' }} &bull; {{ activeStore?.address }}
+        </span>
+      </div>
+      <h2 class="welcome-title">
+        Welcome back, <span class="highlight">{{ activeStore?.name || 'Pintu Partner Store' }}</span>
+      </h2>
+      <p class="welcome-sub">
+        Here is what is happening today in <strong class="text-purple">{{ activeStore?.city }}</strong>. You have <strong class="text-purple">{{ metrics.activeOrders }} active requests</strong> in progress.
+      </p>
+    </div>
+
+    <div class="hero-action-col">
+      <button type="button" class="hero-action-btn" (click)="navigateToOrders()">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <span>Active Orders ({{ metrics.activeOrders }})</span>
+      </button>
+      <button type="button" class="switch-store-outline-btn" (click)="openStoreSwitcher()">
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+        <span>Switch Store</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4 Metric Cards Grid -->
+  <div class="metrics-grid">
+    <!-- Card 1: Today's Revenue -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-title">Today's Revenue</span>
+        <div class="metric-icon-wrap emerald">
+          <ion-icon name="wallet-outline"></ion-icon>
+        </div>
+      </div>
+      <div class="metric-body">
+        <h3 class="metric-value">₹{{ metrics.todaySales | number:'1.0-0' }}</h3>
+        <span class="metric-trend positive">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          {{ metrics.salesGrowth }} vs yesterday
+        </span>
+      </div>
+    </div>
+
+    <!-- Card 2: Active Orders / Bookings -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-title">Active Requests</span>
+        <div class="metric-icon-wrap amber">
+          <ion-icon name="time-outline"></ion-icon>
+        </div>
+      </div>
+      <div class="metric-body">
+        <h3 class="metric-value">{{ metrics.activeOrders }}</h3>
+        <span class="metric-trend neutral">
+          Requires action
+        </span>
+      </div>
+    </div>
+
+    <!-- Card 3: Completed Orders -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-title">Fulfilled Today</span>
+        <div class="metric-icon-wrap blue">
+          <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        </div>
+      </div>
+      <div class="metric-body">
+        <h3 class="metric-value">{{ metrics.completedToday }}</h3>
+        <span class="metric-trend positive">
+          98.8% satisfaction rate
+        </span>
+      </div>
+    </div>
+
+    <!-- Card 4: Catalog & Stock -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-title">
+          {{ activeStore?.serviceType === 'property' ? 'Available Units' : (activeStore?.serviceType === 'lab_test' ? 'Test Packages' : 'Active Items') }}
+        </span>
+        <div class="metric-icon-wrap purple">
+          <ion-icon [name]="activeStore?.serviceIcon || 'cube-outline'"></ion-icon>
+        </div>
+      </div>
+      <div class="metric-body">
+        <h3 class="metric-value">{{ metrics.totalProducts }}</h3>
+        <span class="metric-trend warning" *ngIf="metrics.lowStockCount > 0">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          {{ metrics.lowStockCount }} items low stock
+        </span>
+        <span class="metric-trend positive" *ngIf="metrics.lowStockCount === 0">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          All listings active
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Row -->
+  <div class="quick-actions-bar">
+    <div class="quick-actions-title">
+      <ion-icon name="flash-outline"></ion-icon>
+      <span>Quick Actions &bull; {{ activeStore?.serviceLabel }}</span>
+    </div>
+    <div class="quick-actions-chips">
+      <button type="button" class="quick-chip" (click)="navigateToOrders()">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <span>View Live Orders</span>
+      </button>
+      <button type="button" class="quick-chip" (click)="navigateToCatalog()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <span>
+          {{ activeStore?.serviceType === 'property' ? 'Add Property Unit' : (activeStore?.serviceType === 'lab_test' ? 'Add Test Package' : 'Add Item') }}
+        </span>
+      </button>
+      <button type="button" class="quick-chip" routerLink="/layout/analytics">
+        <ion-icon name="cash-outline"></ion-icon>
+        <span>Settlements & Payouts</span>
+      </button>
+      <button type="button" class="quick-chip" (click)="openStoreSwitcher()">
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+        <span>Switch Store ({{ activeStore?.city }})</span>
+      </button>
+      <button type="button" class="quick-chip" routerLink="/layout/settings">
+        <ion-icon name="settings-outline"></ion-icon>
+        <span>Store Details</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Recent Orders Table / Card -->
+  <div class="orders-section-card">
+    <div class="section-header">
+      <div>
+        <h3 class="section-title">Recent Inquiries & Orders &bull; {{ activeStore?.name }}</h3>
+        <p class="section-sub">Live requests placed through Pintu App in {{ activeStore?.city }}</p>
+      </div>
+      <button type="button" class="view-all-btn" (click)="navigateToOrders()">
+        <span>View All Orders</span>
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Desktop Table View (>= 768px) -->
+    <div class="orders-table-wrapper" *ngIf="recentOrders.length > 0; else noOrders">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items / Service Description</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ord of recentOrders">
+            <td>
+              <strong class="order-id-code">{{ ord.orderNumber }}</strong>
+            </td>
+            <td>
+              <div class="customer-info-col">
+                <span class="customer-name">{{ ord.customerName }}</span>
+                <span class="customer-phone">+91 {{ ord.customerPhone }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="items-text" [title]="ord.itemsSummary">{{ ord.itemsSummary }}</span>
+            </td>
+            <td>
+              <strong class="amount-val">₹{{ ord.totalAmount | number:'1.0-0' }}</strong>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(ord.status)">
+                {{ getStatusLabel(ord.status) }}
+              </span>
+            </td>
+            <td>
+              <span class="time-text">{{ ord.timeAgo }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Card List View (< 768px) -->
+    <div class="mobile-orders-list" *ngIf="recentOrders.length > 0">
+      <div *ngFor="let ord of recentOrders" class="mobile-order-card">
+        <div class="card-top-row">
+          <span class="order-id-pill">{{ ord.orderNumber }}</span>
+          <span class="status-badge" [ngClass]="getStatusBadgeClass(ord.status)">
+            {{ getStatusLabel(ord.status) }}
+          </span>
+        </div>
+        <div class="card-mid-row">
+          <div class="customer-block">
+            <strong>{{ ord.customerName }}</strong>
+            <small>+91 {{ ord.customerPhone }}</small>
+          </div>
+          <div class="amount-block">
+            <strong>₹{{ ord.totalAmount | number:'1.0-0' }}</strong>
+            <small>{{ ord.timeAgo }}</small>
+          </div>
+        </div>
+        <div class="card-items-row">
+          <ion-icon [name]="activeStore?.serviceIcon || 'bag-handle-outline'"></ion-icon>
+          <span>{{ ord.itemsSummary }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noOrders>
+      <div class="empty-orders-banner">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <p>No new orders for this store right now. New incoming customer orders will appear here automatically.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

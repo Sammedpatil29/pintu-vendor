@@ -1,8 +1,9 @@
-import { NgModule } from '@angular/core';
+import { NgModule, provideZonelessChangeDetection } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 
-import { IonicModule, IonicRouteStrategy } from '@ionic/angular/lazy';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { IonicModule, IonicRouteStrategy, ModalController, AlertController, ToastController } from '@ionic/angular/lazy';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -12,6 +13,11 @@ import { AppRoutingModule } from './app-routing.module';
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    ModalController,
+    AlertController,
+    ToastController,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideZonelessChangeDetection(),
   ],
   bootstrap: [AppComponent],
 })
