@@ -863,6 +863,10 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: 90;
+
+  @media (min-width: 992px) {
+    display: none !important;
+  }
 }
 
 .mobile-drawer {
@@ -873,9 +877,11 @@
   width: 290px;
   background: var(--vendor-sidebar-bg);
   border-right: 1px solid var(--vendor-border);
-  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.25);
+  box-shadow: none;
   transform: translateX(-100%);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.28s, background-color 0.25s ease;
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -883,6 +889,13 @@
 
   &.open {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.25);
+  }
+
+  @media (min-width: 992px) {
+    display: none !important;
   }
 
   .drawer-header {
