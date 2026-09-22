@@ -177,4 +177,76 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
+
+  // ==========================================
+  // VENDOR ONBOARDING & REGISTRATION
+  // ==========================================
+
+  /**
+   * Request OTP for Vendor Onboarding / Registration Email
+   */
+  public sendRegistrationOtp(email: string): Observable<any> {
+    const cleanEmail = email.trim().toLowerCase();
+    return this.http.post<any>(`${this.apiUrl}/api/vendor/register/send-otp`, {
+      email: cleanEmail,
+    });
+  }
+
+  /**
+   * Verify Registration OTP and check if draft exists
+   */
+  public verifyRegistrationOtp(email: string, otp: string): Observable<any> {
+    const cleanEmail = email.trim().toLowerCase();
+    return this.http.post<any>(`${this.apiUrl}/api/vendor/register/verify-otp`, {
+      email: cleanEmail,
+      otp: otp.trim(),
+    });
+  }
+
+  /**
+   * Save / update draft progress for verified email
+   */
+  public saveRegistrationDraft(email: string, formData: any, step?: number): Observable<any> {
+    const cleanEmail = email.trim().toLowerCase();
+    return this.http.post<any>(`${this.apiUrl}/api/vendor/register/save-draft`, {
+      email: cleanEmail,
+      formData,
+      step,
+    });
+  }
+
+  /**
+   * Delete draft for email to start completely fresh
+   */
+  public deleteRegistrationDraft(email: string): Observable<any> {
+    const cleanEmail = email.trim().toLowerCase();
+    return this.http.delete<any>(`${this.apiUrl}/api/vendor/register/draft/${encodeURIComponent(cleanEmail)}`);
+  }
+
+  /**
+   * Fetch dynamic onboarding metadata (service areas, services and document requirements)
+   */
+  public getRegistrationMetadata(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/api/vendor/register/metadata`);
+  }
+
+  /**
+   * Check phone number availability
+   */
+  public checkPhoneAvailability(phone: string, email?: string): Observable<any> {
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    const emailParam = email ? `&email=${encodeURIComponent(email.trim().toLowerCase())}` : '';
+    return this.http.get<any>(`${this.apiUrl}/api/vendor/register/check-phone?phone=${cleanPhone}${emailParam}`);
+  }
+
+  /**
+   * Final submission of vendor registration
+   */
+  public submitRegistration(email: string, formData: any): Observable<any> {
+    const cleanEmail = email.trim().toLowerCase();
+    return this.http.post<any>(`${this.apiUrl}/api/vendor/register/submit`, {
+      email: cleanEmail,
+      formData,
+    });
+  }
 }

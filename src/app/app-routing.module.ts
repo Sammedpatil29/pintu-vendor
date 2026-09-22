@@ -10,6 +10,12 @@ const routes: Routes = [
       import('./pages/login/login.module').then((m) => m.LoginPageModule),
   },
   {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadChildren: () =>
+      import('./pages/register/register.module').then((m) => m.RegisterPageModule),
+  },
+  {
     path: 'layout',
     canActivate: [authGuard],
     loadChildren: () =>

@@ -1,0 +1,877 @@
+<ion-content [fullscreen]="true" class="register-content">
+  <div class="register-wrapper">
+
+    <!-- Top Navigation Bar -->
+    <header class="register-header">
+      <div class="header-left">
+        <button type="button" class="back-link-btn" (click)="goToLogin()">
+          <ion-icon name="arrow-back-outline"></ion-icon>
+          <span>Back to Sign In</span>
+        </button>
+      </div>
+
+      <div class="header-center">
+        <div class="brand-logo-pill">
+          <div class="logo-circle">P</div>
+          <span class="brand-name">PINTU</span>
+          <span class="portal-tag">MERCHANT ONBOARDING</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button
+          type="button"
+          class="theme-toggle-btn"
+          (click)="toggleTheme()"
+          title="Toggle Theme"
+        >
+          <ion-icon [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="register-main-card">
+
+      <!-- ========================================================
+           STATE 1: TOP OF FORM - EMAIL ENTRY
+           ======================================================== -->
+      @if (gateState === 'email') {
+        <div class="auth-card fade-in">
+          <div class="card-header-block text-center">
+            <div class="badge-icon">
+              <ion-icon name="mail-open-outline"></ion-icon>
+            </div>
+            <h2>Register Your Business</h2>
+            <p class="sub-text">
+              Join thousands of merchants, clinics, labs, and restaurants expanding their reach on Pintu.
+            </p>
+          </div>
+
+          <div class="card-form-body">
+            <div class="form-group">
+              <label class="field-label required">Business or Merchant Email</label>
+              <div class="input-wrapper">
+                <ion-icon name="mail-outline" class="input-prefix-icon"></ion-icon>
+                <input
+                  type="email"
+                  class="custom-field"
+                  placeholder="owner@yourstore.com"
+                  [(ngModel)]="email"
+                  (keyup.enter)="sendOtp()"
+                  [disabled]="isLoading"
+                  autofocus
+                />
+              </div>
+              <span class="field-help-text">
+                We will check for existing vendor accounts or saved drafts linked to this email.
+              </span>
+            </div>
+
+            @if (errorMessage) {
+              <div class="error-banner">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <span>{{ errorMessage }}</span>
+              </div>
+            }
+
+            <button
+              type="button"
+              class="primary-btn w-100"
+              (click)="sendOtp()"
+              [disabled]="!isEmailValid() || isLoading"
+            >
+              @if (!isLoading) {
+                <span>Send 6-Digit OTP</span>
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              } @else {
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Checking &amp; Sending OTP...</span>
+              }
+            </button>
+
+            <div class="form-footer-hint text-center">
+              <span>Already a registered merchant? </span>
+              <a href="javascript:void(0)" (click)="goToLogin()">Sign In here</a>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================================
+           STATE 2: TOP OF FORM - OTP VERIFICATION
+           ======================================================== -->
+      @if (gateState === 'otp') {
+        <div class="auth-card fade-in">
+          <div class="card-header-block text-center">
+            <div class="badge-icon badge-purple">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+            </div>
+            <h2>Verify Your Email</h2>
+            <p class="sub-text">
+              We sent a 6-digit verification code to<br />
+              <strong class="email-highlight">{{ email }}</strong>
+            </p>
+            <button type="button" class="change-email-btn" (click)="changeEmail()">
+              <ion-icon name="create-outline"></ion-icon>
+              <span>Change Email</span>
+            </button>
+          </div>
+
+          <div class="card-form-body">
+            <!-- 6 Digit Inputs -->
+            <div class="otp-inputs-grid">
+              @for (digit of otpDigits; track $index) {
+                <input
+                  #otpInput
+                  type="tel"
+                  maxlength="1"
+                  class="otp-box"
+                  [value]="otpDigits[$index]"
+                  (input)="onOtpInput($event, $index)"
+                  (keydown)="onOtpKeyDown($event, $index)"
+                  [disabled]="isLoading"
+                />
+              }
+            </div>
+
+            <!-- Resend Strip -->
+            <div class="resend-strip">
+              @if (resendCountdown > 0) {
+                <span class="countdown-text">
+                  ⏱️ Resend code in <strong>{{ resendCountdown }}s</strong>
+                </span>
+              } @else {
+                <button type="button" class="link-btn" (click)="resendOtp()" [disabled]="isLoading">
+                  <ion-icon name="refresh-outline"></ion-icon>
+                  <span>Resend Verification Code</span>
+                </button>
+              }
+            </div>
+
+            @if (errorMessage) {
+              <div class="error-banner">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <span>{{ errorMessage }}</span>
+              </div>
+            }
+
+            <button
+              type="button"
+              class="primary-btn w-100"
+              (click)="verifyOtp()"
+              [disabled]="!isOtpComplete() || isLoading"
+            >
+              @if (!isLoading) {
+                <span>Verify &amp; Continue</span>
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              } @else {
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Verifying...</span>
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================================
+           STATE 3: DRAFT DECISION CARD (RESUME OR DELETE)
+           ======================================================== -->
+      @if (gateState === 'draft_decision') {
+        <div class="auth-card draft-card fade-in">
+          <div class="card-header-block text-center">
+            <div class="draft-badge-icon">
+              <ion-icon name="document-text-outline"></ion-icon>
+            </div>
+            <h2>Saved Draft Found!</h2>
+            <p class="sub-text">
+              We found an unfinished store registration draft linked to <strong>{{ email }}</strong>.
+            </p>
+          </div>
+
+          <!-- Draft Details Box -->
+          <div class="draft-preview-box">
+            <div class="preview-header">
+              <span class="status-tag">Draft in Progress</span>
+              @if (existingDraft?.updatedAt) {
+                <span class="saved-time">
+                  Last saved: {{ existingDraft.updatedAt | date:'mediumDate' }} at {{ existingDraft.updatedAt | date:'shortTime' }}
+                </span>
+              }
+            </div>
+
+            <div class="preview-body">
+              <div class="preview-row">
+                <span class="lbl">Store Name:</span>
+                <strong class="val">{{ existingDraft?.store_name || '(Store Name Not Set)' }}</strong>
+              </div>
+              <div class="preview-row">
+                <span class="lbl">Service Category:</span>
+                <span class="val">{{ getServiceLabel(existingDraft?.service_type || existingDraft?.category || 'grocery') }}</span>
+              </div>
+              <div class="preview-row">
+                <span class="lbl">Operating City:</span>
+                <span class="val">{{ existingDraft?.city || 'Hubballi' }}</span>
+              </div>
+              <div class="preview-row">
+                <span class="lbl">Progress:</span>
+                <span class="val step-badge">Step {{ existingDraft?.step || 1 }} of 4 Completed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions: Resume Draft or Delete Draft -->
+          <div class="draft-actions-grid">
+            <button type="button" class="btn-resume-draft" (click)="resumeDraft()">
+              <ion-icon name="create-outline"></ion-icon>
+              <div class="btn-text">
+                <span class="main-title">Resume &amp; Edit Draft</span>
+                <span class="sub-title">Continue where you left off</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-delete-draft" (click)="confirmDeleteDraft()">
+              <ion-icon name="trash-outline"></ion-icon>
+              <div class="btn-text">
+                <span class="main-title">Delete Draft</span>
+                <span class="sub-title">Discard draft and start fresh</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================================
+           STATE 4: MULTI-STEP REGISTRATION FORM
+           ======================================================== -->
+      @if (gateState === 'form') {
+        <div class="registration-form-container fade-in">
+
+          <!-- Top Status Strip -->
+          <div class="form-top-status-strip">
+            <div class="user-verified-badge">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <span>Verified Email: <strong>{{ email }}</strong></span>
+            </div>
+
+            <div class="save-draft-action">
+              @if (lastSavedAt) {
+                <span class="last-saved-hint">
+                  Auto-saved at {{ lastSavedAt | date:'shortTime' }}
+                </span>
+              }
+              <button
+                type="button"
+                class="save-draft-btn"
+                (click)="saveProgress(true)"
+                [disabled]="isSavingDraft"
+              >
+                @if (!isSavingDraft) {
+                  <ion-icon name="cloud-upload-outline"></ion-icon>
+                  <span>Save Progress</span>
+                } @else {
+                  <ion-spinner name="dots"></ion-spinner>
+                  <span>Saving...</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Wizard Step Indicator -->
+          <div class="wizard-stepper">
+            <div
+              class="wizard-step"
+              [class.active]="currentFormStep === 1"
+              [class.completed]="currentFormStep > 1"
+              (click)="goToStep(1)"
+            >
+              <div class="step-num">
+                @if (currentFormStep > 1) {
+                  <ion-icon name="checkmark"></ion-icon>
+                } @else {
+                  1
+                }
+              </div>
+              <span class="step-label">Store Profile</span>
+            </div>
+
+            <div class="step-line" [class.filled]="currentFormStep > 1"></div>
+
+            <div
+              class="wizard-step"
+              [class.active]="currentFormStep === 2"
+              [class.completed]="currentFormStep > 2"
+              (click)="goToStep(2)"
+            >
+              <div class="step-num">
+                @if (currentFormStep > 2) {
+                  <ion-icon name="checkmark"></ion-icon>
+                } @else {
+                  2
+                }
+              </div>
+              <span class="step-label">Merchant Contact</span>
+            </div>
+
+            <div class="step-line" [class.filled]="currentFormStep > 2"></div>
+
+            <div
+              class="wizard-step"
+              [class.active]="currentFormStep === 3"
+              [class.completed]="currentFormStep > 3"
+              (click)="goToStep(3)"
+            >
+              <div class="step-num">
+                @if (currentFormStep > 3) {
+                  <ion-icon name="checkmark"></ion-icon>
+                } @else {
+                  3
+                }
+              </div>
+              <span class="step-label">Compliance &amp; Docs</span>
+            </div>
+
+            <div class="step-line" [class.filled]="currentFormStep > 3"></div>
+
+            <div
+              class="wizard-step"
+              [class.active]="currentFormStep === 4"
+              (click)="goToStep(4)"
+            >
+              <div class="step-num">4</div>
+              <span class="step-label">Review &amp; Submit</span>
+            </div>
+          </div>
+
+          <!-- ================= STEP 1: STORE BASICS ================= -->
+          @if (currentFormStep === 1) {
+            <div class="step-card fade-in">
+              <div class="step-card-header">
+                <h3>Store &amp; Location Details</h3>
+                <p>Provide primary information about your shop, clinic, lab or enterprise.</p>
+              </div>
+
+              <!-- Initial Store Policy Notice -->
+              <div class="initial-store-banner">
+                <div class="banner-icon-wrap">
+                  <ion-icon name="storefront-outline"></ion-icon>
+                </div>
+                <div class="banner-content">
+                  <div class="banner-title">
+                    <strong>{{ singleStoreNotice?.title || 'Primary Store Onboarding' }}</strong>
+                    <span class="store-badge">Store #1</span>
+                  </div>
+                  <p class="banner-desc">
+                    {{ singleStoreNotice?.message || 'You are registering your 1st primary store location. Multiple store outlets can be added and managed directly inside your merchant dashboard after activation.' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Service Type Selection Grid -->
+              <div class="form-group full-width">
+                <label class="field-label required">Select Primary Service Offering</label>
+                <div class="service-cards-grid">
+                  @for (srv of services; track srv.id) {
+                    <div
+                      class="service-select-card"
+                      [class.selected]="form.service_type === srv.id"
+                      (click)="selectService(srv.id)"
+                    >
+                      <div class="card-icon">
+                        <ion-icon [name]="srv.icon"></ion-icon>
+                      </div>
+                      <div class="card-body">
+                        <span class="srv-title">{{ srv.title }}</span>
+                        <span class="srv-subtitle">{{ srv.subtitle }}</span>
+                      </div>
+                      <div class="check-radio">
+                        <ion-icon [name]="form.service_type === srv.id ? 'radio-button-on' : 'radio-button-off'"></ion-icon>
+                      </div>
+                    </div>
+                  }
+                </div>
+                <span class="field-help-text">
+                  Choose the category that matches your core offering. Document requirements in Step 3 will automatically adjust to this service.
+                </span>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label class="field-label required">Store / Establishment Name</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="storefront-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field"
+                      placeholder="e.g. Patil Care Pharmacy / Green Mart / Apollo Diagnostics"
+                      [(ngModel)]="form.store_name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label required">Operating City / Region</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="location-outline" class="input-prefix-icon"></ion-icon>
+                    <select class="custom-field custom-select" [(ngModel)]="form.city">
+                      @for (city of cities; track city) {
+                        <option [value]="city">{{ city }}</option>
+                      }
+                    </select>
+                  </div>
+                  <span class="field-help-text">Populated from active Pintu delivery and service areas.</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label required">Pincode</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="pin-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      maxlength="6"
+                      class="custom-field font-mono"
+                      placeholder="6-digit Pincode"
+                      [(ngModel)]="form.pincode"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="field-label required">Full Street Address</label>
+                  <div class="input-wrapper">
+                    <textarea
+                      rows="3"
+                      class="custom-field custom-textarea"
+                      placeholder="Shop / Suite / Floor No, Commercial Building, Street / Road, Area / Ward..."
+                      [(ngModel)]="form.address"
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="field-label">Prominent Landmark (Optional)</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="navigate-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field"
+                      placeholder="Near Circle / Opposite Hospital / Behind Bus Stand..."
+                      [(ngModel)]="form.landmark"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-footer-actions">
+                <div></div>
+                <button type="button" class="primary-btn" (click)="nextStep()">
+                  <span>Next: Merchant Contact</span>
+                  <ion-icon name="arrow-forward-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- ================= STEP 2: MERCHANT CONTACT ================= -->
+          @if (currentFormStep === 2) {
+            <div class="step-card fade-in">
+              <div class="step-card-header">
+                <h3>Merchant &amp; Owner Profile</h3>
+                <p>Contact person details for store management, operational alerts and order escalations.</p>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label class="field-label required">Merchant / Owner Full Name</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="person-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field"
+                      placeholder="e.g. Ramesh Patil"
+                      [(ngModel)]="form.name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="label-with-status">
+                    <label class="field-label required">Primary Mobile Number</label>
+                    @if (phoneCheckStatus === 'checking') {
+                      <span class="status-pill status-checking">
+                        <ion-spinner name="dots"></ion-spinner> Checking...
+                      </span>
+                    }
+                    @if (phoneCheckStatus === 'available') {
+                      <span class="status-pill status-available">
+                        <ion-icon name="checkmark-circle"></ion-icon> Available
+                      </span>
+                    }
+                    @if (phoneCheckStatus === 'taken') {
+                      <span class="status-pill status-taken">
+                        <ion-icon name="alert-circle"></ion-icon> Already Registered
+                      </span>
+                    }
+                  </div>
+                  <div
+                    class="input-wrapper"
+                    [class.input-error]="phoneCheckStatus === 'taken'"
+                    [class.input-success]="phoneCheckStatus === 'available'"
+                  >
+                    <span class="phone-prefix">+91</span>
+                    <input
+                      type="tel"
+                      maxlength="10"
+                      class="custom-field font-mono"
+                      placeholder="10-digit number"
+                      [(ngModel)]="form.phone"
+                      (input)="onPhoneInput()"
+                      required
+                    />
+                  </div>
+                  @if (phoneCheckStatus === 'taken') {
+                    <div class="field-inline-error">
+                      <ion-icon name="warning-outline"></ion-icon>
+                      <span>{{ phoneCheckMessage }}</span>
+                    </div>
+                  } @else {
+                    <span class="field-help-text">Used as your merchant login identifier once approved.</span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label">WhatsApp / Alternate Phone</label>
+                  <div class="input-wrapper">
+                    <span class="phone-prefix">+91</span>
+                    <input
+                      type="tel"
+                      maxlength="10"
+                      class="custom-field font-mono"
+                      placeholder="Optional alternate number"
+                      [(ngModel)]="form.alt_phone"
+                    />
+                  </div>
+                  <span class="field-help-text">Optional backup number for customer service calls.</span>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="field-label">Verified Business Email</label>
+                  <div class="input-wrapper locked-input">
+                    <ion-icon name="lock-closed-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="email"
+                      class="custom-field"
+                      [value]="form.email"
+                      disabled
+                    />
+                    <span class="verified-tag">
+                      <ion-icon name="checkmark-circle"></ion-icon> Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-footer-actions">
+                <button type="button" class="secondary-btn" (click)="prevStep()">
+                  <ion-icon name="arrow-back-outline"></ion-icon>
+                  <span>Back</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="primary-btn"
+                  (click)="nextStep()"
+                  [disabled]="phoneCheckStatus === 'taken' || phoneCheckStatus === 'checking'"
+                >
+                  <span>Next: Compliance &amp; Docs</span>
+                  <ion-icon name="arrow-forward-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- ================= STEP 3: COMPLIANCE & SERVICE-SPECIFIC DOCS ================= -->
+          @if (currentFormStep === 3) {
+            <div class="step-card fade-in">
+              <div class="step-card-header">
+                <div class="service-pill-tag">
+                  <ion-icon [name]="selectedServiceMeta?.icon || 'shield-checkmark-outline'"></ion-icon>
+                  <span>{{ selectedServiceMeta?.title || 'Service Compliance' }}</span>
+                </div>
+                <h3>Statutory Compliance &amp; Bank Settlement</h3>
+                <p>Required regulatory documents tailored for your selected service category.</p>
+              </div>
+
+              <!-- Service Specific Dynamic Document Fields -->
+              <div class="form-grid">
+                @for (doc of selectedServiceMeta?.documents; track doc.key) {
+                  <div
+                    class="form-group"
+                    [class.full-width]="doc.key === 'clinical_establishment_no' || doc.key === 'drug_license_no' || doc.key === 'rera_number'"
+                  >
+                    <label class="field-label" [class.required]="doc.required">{{ doc.label }}</label>
+                    <div class="input-wrapper">
+                      <ion-icon name="document-text-outline" class="input-prefix-icon"></ion-icon>
+                      <input
+                        type="text"
+                        class="custom-field uppercase-field"
+                        [placeholder]="doc.placeholder"
+                        [(ngModel)]="form.documents[doc.key]"
+                      />
+                    </div>
+                    @if (doc.helpText) {
+                      <span class="field-help-text">{{ doc.helpText }}</span>
+                    }
+                  </div>
+                }
+
+                <!-- Bank Details Section -->
+                <div class="section-divider full-width">
+                  <span class="divider-label">Bank Account for Daily Payout Settlements</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label">Bank Name</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="business-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field"
+                      placeholder="e.g. State Bank of India, HDFC Bank, ICICI"
+                      [(ngModel)]="form.bank_name"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label">Account Holder Name</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="person-circle-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field"
+                      placeholder="Name as printed in passbook"
+                      [(ngModel)]="form.account_holder"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label">Account Number</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="wallet-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      class="custom-field font-mono"
+                      placeholder="Bank Account Number"
+                      [(ngModel)]="form.account_number"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label">IFSC Code</label>
+                  <div class="input-wrapper">
+                    <ion-icon name="code-working-outline" class="input-prefix-icon"></ion-icon>
+                    <input
+                      type="text"
+                      maxlength="11"
+                      class="custom-field uppercase-field font-mono"
+                      placeholder="11-digit IFSC (e.g. SBIN0001234)"
+                      [(ngModel)]="form.ifsc_code"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-footer-actions">
+                <button type="button" class="secondary-btn" (click)="prevStep()">
+                  <ion-icon name="arrow-back-outline"></ion-icon>
+                  <span>Back</span>
+                </button>
+
+                <button type="button" class="primary-btn" (click)="nextStep()">
+                  <span>Next: Review &amp; Submit</span>
+                  <ion-icon name="arrow-forward-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- ================= STEP 4: REVIEW & SUBMIT ================= -->
+          @if (currentFormStep === 4) {
+            <div class="step-card fade-in">
+              <div class="step-card-header">
+                <h3>Review Application Details</h3>
+                <p>Please inspect your store details and documents before final onboarding submission.</p>
+              </div>
+
+              <!-- Initial Store Notice Reminder -->
+              <div class="review-policy-strip">
+                <ion-icon name="information-circle"></ion-icon>
+                <span>You are onboarding <strong>Store #1 (Primary)</strong>. Additional branch outlets can be created in your dashboard once activated.</span>
+              </div>
+
+              <div class="review-sections-list">
+                <!-- Section 1: Store -->
+                <div class="review-box">
+                  <div class="box-head">
+                    <span class="box-title">
+                      <ion-icon name="storefront-outline"></ion-icon> Store &amp; Service Profile
+                    </span>
+                    <button type="button" class="btn-edit-step" (click)="currentFormStep = 1">Edit</button>
+                  </div>
+                  <div class="box-grid">
+                    <div><span class="lbl">Store:</span> <strong>{{ form.store_name }}</strong></div>
+                    <div><span class="lbl">Service:</span> <span class="badge-service">{{ selectedServiceMeta?.title || form.service_type }}</span></div>
+                    <div><span class="lbl">City:</span> {{ form.city }}</div>
+                    <div><span class="lbl">Pincode:</span> {{ form.pincode }}</div>
+                    <div class="full"><span class="lbl">Address:</span> {{ form.address }}</div>
+                    @if (form.landmark) {
+                      <div class="full"><span class="lbl">Landmark:</span> {{ form.landmark }}</div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Section 2: Merchant -->
+                <div class="review-box">
+                  <div class="box-head">
+                    <span class="box-title">
+                      <ion-icon name="person-outline"></ion-icon> Merchant Contact
+                    </span>
+                    <button type="button" class="btn-edit-step" (click)="currentFormStep = 2">Edit</button>
+                  </div>
+                  <div class="box-grid">
+                    <div><span class="lbl">Owner:</span> <strong>{{ form.name }}</strong></div>
+                    <div><span class="lbl">Login Mobile:</span> +91 {{ form.phone }}</div>
+                    <div><span class="lbl">Email:</span> {{ form.email }}</div>
+                    @if (form.alt_phone) {
+                      <div><span class="lbl">Alt Contact:</span> +91 {{ form.alt_phone }}</div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Section 3: Compliance & Documents -->
+                <div class="review-box">
+                  <div class="box-head">
+                    <span class="box-title">
+                      <ion-icon name="ribbon-outline"></ion-icon> Statutory Documents &amp; Banking
+                    </span>
+                    <button type="button" class="btn-edit-step" (click)="currentFormStep = 3">Edit</button>
+                  </div>
+                  <div class="box-grid">
+                    @for (doc of selectedServiceMeta?.documents; track doc.key) {
+                      <div>
+                        <span class="lbl">{{ doc.label }}:</span>
+                        <strong>{{ form.documents[doc.key] || 'Not specified' }}</strong>
+                      </div>
+                    }
+                    @if (form.bank_name || form.account_number) {
+                      <div><span class="lbl">Bank:</span> {{ form.bank_name || 'N/A' }}</div>
+                      <div><span class="lbl">IFSC:</span> {{ form.ifsc_code || 'N/A' }}</div>
+                      <div><span class="lbl">A/C Holder:</span> {{ form.account_holder || 'N/A' }}</div>
+                      <div><span class="lbl">A/C No:</span> {{ form.account_number || 'N/A' }}</div>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Terms Acceptance -->
+              <div class="terms-card">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="termsAccepted" />
+                  <span>
+                    I confirm that the store details, category and regulatory documents provided above are genuine and valid. I agree to the
+                    <a href="javascript:void(0)">Pintu Partner Agreement</a> and understand that store onboarding approval is subject to document verification.
+                  </span>
+                </label>
+              </div>
+
+              <div class="step-footer-actions">
+                <button type="button" class="secondary-btn" (click)="prevStep()">
+                  <ion-icon name="arrow-back-outline"></ion-icon>
+                  <span>Back</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="primary-btn submit-final-btn"
+                  (click)="submitRegistration()"
+                  [disabled]="!termsAccepted || isSubmitting"
+                >
+                  @if (!isSubmitting) {
+                    <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+                    <span>Submit Store Application</span>
+                  } @else {
+                    <ion-spinner name="crescent"></ion-spinner>
+                    <span>Submitting Application...</span>
+                  }
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+
+      <!-- ========================================================
+           STATE 5: REGISTRATION SUBMITTED CONFIRMATION
+           ======================================================== -->
+      @if (gateState === 'submitted') {
+        <div class="auth-card success-card fade-in text-center">
+          <div class="success-icon-badge">
+            <ion-icon name="checkmark-circle"></ion-icon>
+          </div>
+          <h2>Application Submitted! 🎉</h2>
+          <p class="sub-text">
+            Your store registration application for <strong>{{ submittedStoreName }}</strong> has been securely submitted for onboarding verification.
+          </p>
+
+          <div class="application-id-box">
+            <span class="lbl">Application Reference ID</span>
+            <span class="code">{{ submittedRegId }}</span>
+          </div>
+
+          <div class="next-steps-card">
+            <h4>What happens next?</h4>
+            <div class="timeline-step">
+              <span class="step-dot">1</span>
+              <p>Our merchant onboarding specialist reviews your store information and documents within 24 to 48 hours.</p>
+            </div>
+            <div class="timeline-step">
+              <span class="step-dot">2</span>
+              <p>You will receive an activation update directly on your verified email (<strong>{{ email }}</strong>).</p>
+            </div>
+            <div class="timeline-step">
+              <span class="step-dot">3</span>
+              <p>Once activated, sign in instantly using your mobile number (+91 {{ form.phone }}).</p>
+            </div>
+          </div>
+
+          <div class="sub-store-hint-card">
+            <ion-icon name="git-branch-outline"></ion-icon>
+            <div>
+              <strong>Multiple Outlets?</strong>
+              <p>You can add and link additional store branches directly in your merchant portal after your first store is verified.</p>
+            </div>
+          </div>
+
+          <button type="button" class="primary-btn w-100" (click)="goToLogin()">
+            <ion-icon name="log-in-outline"></ion-icon>
+            <span>Proceed to Vendor Sign In</span>
+          </button>
+        </div>
+      }
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="register-footer text-center">
+      <p>© 2026 Pintu Technologies Pvt. Ltd. All rights reserved. • Merchant Onboarding Portal</p>
+    </footer>
+
+  </div>
+</ion-content>

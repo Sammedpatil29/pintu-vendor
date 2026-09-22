@@ -616,6 +616,51 @@
   }
 }
 
+/* Onboarding Registration Callout */
+.register-onboarding-callout {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--vendor-border, rgba(255, 255, 255, 0.08));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+
+  .callout-text {
+    font-size: 12.5px;
+    color: var(--vendor-text-secondary, #94a3b8);
+  }
+
+  .btn-register-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: rgba(160, 0, 226, 0.1);
+    border: 1.5px solid rgba(160, 0, 226, 0.35);
+    color: var(--pintu-primary, #a000e2);
+    font-size: 13.5px;
+    font-weight: 750;
+    text-decoration: none;
+    transition: all 0.2s ease;
+
+    ion-icon {
+      font-size: 17px;
+    }
+
+    &:hover {
+      background: var(--pintu-primary, #a000e2);
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(160, 0, 226, 0.35);
+    }
+  }
+}
+
 /* Auth Footer */
 .auth-footer {
   margin-top: 28px;
